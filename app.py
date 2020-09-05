@@ -3,10 +3,14 @@ import http
 from flask import Flask, request
 from flask_jwt import JWT, jwt_required
 from flask_restful import Api, Resource, reqparse
+
+from resources.user import UserRegister
 from security import authenticate, identity
 
-
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['PROPAGATE_EXCEPTIONS'] = True
 app.secret_key = 'my-secret-key'
 api = Api(app)
 jwt = JWT(
@@ -68,8 +72,6 @@ class Movie(Resource):
         return movie, status
 
 
-
-
 class MovieList(Resource):
     @jwt_required()
     def get(self):
@@ -90,10 +92,17 @@ class MovieList(Resource):
 #           - update pojedynczego filmu (PATCH, PUT)
 #           - usunięcie pojedynczego filmu (DELETE)
 
-
 api.add_resource(Student, '/student/<string:name>')
 api.add_resource(Movie, '/movie/<string:name>')
 api.add_resource(MovieList, '/movie')
+api.add_resource(UserRegister, '/user')
+
+
+def create_app():
+    from db import db
+    db.init_app(app)
+    app.run()
+
 
 if __name__ == '__main__':
-    app.run()
+    create_app()
